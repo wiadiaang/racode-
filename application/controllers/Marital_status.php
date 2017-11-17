@@ -1,0 +1,154 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Marital_status extends CI_Controller
+{
+    
+        
+    function __construct()
+    {
+        parent::__construct();
+        $this->load->model('Marital_status_model');
+        $this->load->library('form_validation');
+    }
+
+    public function index()
+    {
+        $q = urldecode($this->input->get('q', TRUE));
+        $start = intval($this->input->get('start'));
+        
+        if ($q <> '') {
+            $config['base_url'] = base_url() . 'marital_status/index.html?q=' . urlencode($q);
+            $config['first_url'] = base_url() . 'marital_status/index.html?q=' . urlencode($q);
+        } else {
+            $config['base_url'] = base_url() . 'marital_status/index.html';
+            $config['first_url'] = base_url() . 'marital_status/index.html';
+        }
+
+        $config['per_page'] = 10;
+        $config['page_query_string'] = TRUE;
+        $config['total_rows'] = $this->Marital_status_model->total_rows($q);
+        $marital_status = $this->Marital_status_model->get_limit_data($config['per_page'], $start, $q);
+
+        $this->load->library('pagination');
+        $this->pagination->initialize($config);
+
+        $data = array(
+            'marital_status_data' => $marital_status,
+            'q' => $q,
+            'pagination' => $this->pagination->create_links(),
+            'total_rows' => $config['total_rows'],
+            'start' => $start,
+        );
+        $this->template->load('template','marital_status_list', $data);
+    }
+
+    public function read($id) 
+    {
+        $row = $this->Marital_status_model->get_by_id($id);
+        if ($row) {
+            $data = array(
+		'marital_status_id' => $row->marital_status_id,
+		'status_name' => $row->status_name,
+	    );
+            $this->template->load('template','marital_status_read', $data);
+        } else {
+            $this->session->set_flashdata('message', 'Record Not Found');
+            redirect(site_url('marital_status'));
+        }
+    }
+
+    public function create() 
+    {
+        $data = array(
+            'button' => 'Create',
+            'action' => site_url('marital_status/create_action'),
+	    'marital_status_id' => set_value('marital_status_id'),
+	    'status_name' => set_value('status_name'),
+	);
+        $this->template->load('template','marital_status_form', $data);
+    }
+    
+    public function create_action() 
+    {
+        $this->_rules();
+
+        if ($this->form_validation->run() == FALSE) {
+            $this->create();
+        } else {
+            $data = array(
+		'status_name' => $this->input->post('status_name',TRUE),
+	    );
+
+            $this->Marital_status_model->insert($data);
+            $this->session->set_flashdata('message', 'Create Record Success');
+            redirect(site_url('marital_status'));
+        }
+    }
+    
+    public function update($id) 
+    {
+        $row = $this->Marital_status_model->get_by_id($id);
+
+        if ($row) {
+            $data = array(
+                'button' => 'Update',
+                'action' => site_url('marital_status/update_action'),
+		'marital_status_id' => set_value('marital_status_id', $row->marital_status_id),
+		'status_name' => set_value('status_name', $row->status_name),
+	    );
+            $this->template->load('template','marital_status_form', $data);
+        } else {
+            $this->session->set_flashdata('message', 'Record Not Found');
+            redirect(site_url('marital_status'));
+        }
+    }
+    
+    public function update_action() 
+    {
+        $this->_rules();
+
+        if ($this->form_validation->run() == FALSE) {
+            $this->update($this->input->post('marital_status_id', TRUE));
+        } else {
+            $data = array(
+		'status_name' => $this->input->post('status_name',TRUE),
+	    );
+
+            $this->Marital_status_model->update($this->input->post('marital_status_id', TRUE), $data);
+            $this->session->set_flashdata('message', 'Update Record Success');
+            redirect(site_url('marital_status'));
+        }
+    }
+    
+    public function delete($id) 
+    {
+        $row = $this->Marital_status_model->get_by_id($id);
+
+        if ($row) {
+            $this->Marital_status_model->delete($id);
+            $this->session->set_flashdata('message', 'Delete Record Success');
+            redirect(site_url('marital_status'));
+        } else {
+            $this->session->set_flashdata('message', 'Record Not Found');
+            redirect(site_url('marital_status'));
+        }
+    }
+
+    public function _rules() 
+    {
+	$this->form_validation->set_rules('status_name', 'status name', 'trim|required');
+
+	$this->form_validation->set_rules('marital_status_id', 'marital_status_id', 'trim');
+	$this->form_validation->set_error_delimiters('<span class="text-danger">', '</span>');
+    }
+
+}
+
+/* End of file Marital_status.php */
+/* Location: ./application/controllers/Marital_status.php */
+/* Please DO NOT modify this information : */
+/* Generated by Harviacode Codeigniter CRUD Generator 2017-01-27 06:55:02 */
+/* http://harviacode.com */
